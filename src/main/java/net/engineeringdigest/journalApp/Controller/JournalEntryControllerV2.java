@@ -1,6 +1,7 @@
 package net.engineeringdigest.journalApp.Controller;
 
 import net.engineeringdigest.journalApp.Entity.JournalEntry;
+import net.engineeringdigest.journalApp.Entity.User;
 import net.engineeringdigest.journalApp.Service.JournalEntryService;
 import net.engineeringdigest.journalApp.Service.UserService;
 import org.bson.types.ObjectId;
@@ -24,8 +25,9 @@ public class JournalEntryControllerV2 {
 
     @GetMapping("/{userName}")
     public ResponseEntity<?> getallJournalEntriesOfUser(@PathVariable String userName){  // ? -- wild card -- can be anything -- object of any class
-        List<JournalEntry> all = journalentryservice.getAll();
-        if(!all.isEmpty()){
+        User user = userService.findByUserName(userName);
+        List<JournalEntry> all = user.getJournalEntries();
+        if(all != null && !all.isEmpty()){
             return new ResponseEntity<>(all, HttpStatus.OK);
         }
 
@@ -33,11 +35,10 @@ public class JournalEntryControllerV2 {
 
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<JournalEntry> create(@RequestBody JournalEntry myEntry){
+    @PostMapping("/{userName}")
+    public ResponseEntity<JournalEntry> create(@RequestBody JournalEntry myEntry, @PathVariable String userName){
         try {
-            myEntry.setDate(LocalDateTime.now());
-            journalentryservice.saveEntry(myEntry);
+            journalentryservice.saveEntry(myEntry, userName);
             return new ResponseEntity<>(myEntry, HttpStatus.CREATED);
         }
         catch (Exception e){
@@ -56,14 +57,18 @@ public class JournalEntryControllerV2 {
 
     }
 
-    @DeleteMapping("/id/{myId}")
-    public ResponseEntity<?> deleteJournalEntryById(@PathVariable ObjectId myId){
-        journalentryservice.deleteById(myId);
+    @DeleteMapping("/id/{userName}/{myId}")
+    public ResponseEntity<?> deleteJournalEntryById(@PathVariable ObjectId myId, @PathVariable String userName){
+        journalentryservice.deleteById(myId, userName);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PutMapping("/update/{myId}")
-    public ResponseEntity<?> updateJournalEntry(@PathVariable ObjectId myId, @RequestBody JournalEntry newEntry){
+    @PutMapping("/id/{userName}/{myId}")
+    public ResponseEntity<?> updateJournalEntry
+            (@PathVariable ObjectId myId,
+             @RequestBody JournalEntry newEntry,
+             @PathVariable String userName )
+    {
         JournalEntry old = journalentryservice.findById(myId).orElse(null);
         if(old != null){
             old.setTitle(newEntry.getTitle() != null && !newEntry.getTitle().equals("") ? newEntry.getTitle() : old.getTitle());
