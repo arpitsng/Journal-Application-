@@ -2,6 +2,7 @@ package net.engineeringdigest.journalApp.Controller;
 
 import net.engineeringdigest.journalApp.Entity.JournalEntry;
 import net.engineeringdigest.journalApp.Service.JournalEntryService;
+import net.engineeringdigest.journalApp.Service.UserService;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,8 +19,11 @@ public class JournalEntryControllerV2 {
     @Autowired
     public JournalEntryService journalentryservice;
 
-    @GetMapping("/list")
-    public ResponseEntity<?> getall(){  // ? -- wild card -- can be anything -- object of any class
+    @Autowired
+    public UserService userService;
+
+    @GetMapping("/{userName}")
+    public ResponseEntity<?> getallJournalEntriesOfUser(@PathVariable String userName){  // ? -- wild card -- can be anything -- object of any class
         List<JournalEntry> all = journalentryservice.getAll();
         if(!all.isEmpty()){
             return new ResponseEntity<>(all, HttpStatus.OK);
